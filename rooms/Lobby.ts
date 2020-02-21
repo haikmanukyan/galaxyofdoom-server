@@ -1,5 +1,6 @@
 import { Room, Client, generateId } from "colyseus";
 import { Schema, type, MapSchema, ArraySchema } from "@colyseus/schema";
+import { DEFAULT_SEAT_RESERVATION_TIME } from "colyseus/lib/Room";
 
 enum ActionState {
   InProgress, Complete, Failed
@@ -14,33 +15,26 @@ class Vector extends Schema {
   z: number = 0;
 }
 
-class Action extends Schema {
-  @type("boolean")
-  isComplete: boolean = false;
-}
-
-class MoveAction extends Action {
-  @type(Vector)
-  destination: Vector = new Vector();
-
-  @type("number")
-  stoppingDistance: number = 0;
-}
-
 class Unit extends Schema {
   @type("string")
   uid: string = "";
+  
+  @type("string")
+  name: string = "";
 
   @type(["number"])
   position: ArraySchema<number> = new ArraySchema<number>();
 }
 
 class Player extends Schema {
+  @type("string")
+  uid: string = "";
+
   @type("number")
   color: number = 0;
 
-  @type(["number"])
-  position = new ArraySchema<number>();
+  @type("string")
+  name: string = "";
 
   @type({ map: Unit })
   units = new MapSchema<Unit>();
@@ -52,8 +46,6 @@ class LobbyState extends Schema {
 
   @type({ map: Player })
   players : MapSchema<Player> = new MapSchema<Player>();
-
-  unitPositions : Map<string, Array<number>> = new Map<string, Array<number>>();
 }
 
 export class Lobby extends Room {
@@ -71,12 +63,10 @@ export class Lobby extends Room {
     console.log("client joined!", client.sessionId);
     var player = new Player();
     player.color = Math.floor(Math.random() * 0xffffff);
+    player.name = "Player";
+    player.uid = client.id;
+
     this.state.players[client.sessionId] = player;
-    this.broadcast({
-      "type":"newPlayer",
-      "uid":client.id,
-      "color":player.color
-    })
   }
 
   async onLeave (client: Client, consented: boolean) {
@@ -97,42 +87,23 @@ export class Lobby extends Room {
         "color":player.color
       });
     }
-    if (data.type == "getPlayers") {
-      var playerIds:Array<string> = new Array<string>();
-      var playerColors:Array<number> = new Array<number>();
-      for (let id in state.players) {
-        playerIds.push(id);
-        playerColors.push(state.players[id].color);
-      }
 
-      this.send(client, {
-        "type":"playerList",
-        "players":playerIds,
-        "colors":playerColors
-      });
-    }
     if (data.type == "newUnit") {
-      state.unitPositions[data.unit] = data.position;
-      // var unit: Unit = new Unit();
-      // unit.uid = data.uid;
-      // state.units[data.uid] = unit;
-    }
-    if (data.type == "getUnitById") {
-      console.log(state.unitPositions, state.unitPositions[data.uid]);
-      if (state.unitPositions[data.uid]) {
-        console.log("Sent", state.unitPositions[data.uid]);
-        this.send(client, {
-          "type":"unitInfo",
-          "uid":data.uid, 
-          "position":state.unitPositions[data.uid]
-        })
-      }
+      var unit:Unit = new Unit();
+      unit.uid = data.uid;
+      unit.name = data.unitName;
+      unit.position.push(data.position[0])
+      unit.position.push(data.position[1])
+      unit.position.push(data.position[2])
+
+      player.units[data.uid] = unit;
     }
 
     if (data.type == "command") {
       this.broadcast({
         "type": "command",
         "playerId": client.sessionId,
+        "unitIds": data.unitIds,
         "task": data.task
       });
     }
