@@ -1,32 +1,31 @@
 {
-  "name": "my-app",
+  "name": "colyseus-examples",
   "version": "1.0.0",
-  "description": "npm init template for bootstraping an empty Colyseus project",
-  "main": "lib/index.js",
+  "description": "Usage Examples of Colyseus Game Server",
+  "main": "index.js",
   "scripts": {
     "start": "ts-node index.ts",
-    "loadtest": "colyseus-loadtest loadtest/example.ts --room my_room --numClients 2",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "heroku-postbuild": "npm run build",
+    "generate": "rm gen/network/* && rm -r ..\\galaxyofdoom\\src\\network && npx schema-codegen \"rooms\\Lobby.ts\" --haxe --output gen\\network --namespace network && cp -f -r gen\\network ..\\galaxyofdoom\\src"
+  },
+  "engines": {
+    "node": "8.9.1"
   },
   "author": "",
-  "license": "UNLICENSED",
-  "bugs": {
-    "url": "https://github.com/colyseus/create-colyseus/issues"
-  },
-  "homepage": "https://github.com/colyseus/create-colyseus#readme",
-  "devDependencies": {
-    "@colyseus/loadtest": "^0.12.0",
-    "@types/cors": "^2.8.6",
-    "@types/express": "^4.17.1",
-    "ts-node": "^8.1.0",
-    "typescript": "^3.4.5"
-  },
+  "license": "ISC",
   "dependencies": {
-    "@colyseus/monitor": "^0.11.0",
-    "@colyseus/social": "^0.10.2",
+    "@colyseus/monitor": "^0.11.17",
+    "@colyseus/social": "^0.10.9",
     "colyseus": "^0.12.0",
     "cors": "^2.8.5",
-    "express": "^4.16.4",
-    "express-jwt": "^5.3.1"
+    "express": "^4.14.0",
+    "express-jwt": "^5.3.1",
+    "serve-index": "^1.8.0",
+    "superagent": "^3.8.1"
+  },
+  "devDependencies": {
+    "browserify": "^14.4.0",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.5.3"
   }
 }
