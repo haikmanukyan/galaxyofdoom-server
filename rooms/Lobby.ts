@@ -74,6 +74,11 @@ export class Lobby extends Room {
     
     console.log("disconnected!", client.sessionId);
     delete this.state.players[client.sessionId];
+
+    this.broadcast({
+      "type":"playerDead",
+      "playerId":client.id
+    })
   }
 
   onMessage (client: Client, data: any) {
@@ -104,7 +109,18 @@ export class Lobby extends Room {
         "type": "command",
         "playerId": client.sessionId,
         "unitIds": data.unitIds,
-        "task": data.task
+        "task": data.task,
+        "repeat": data.repeat
+      });
+    }
+
+    if (data.type == "unitCommand") {
+      this.broadcast({
+        "type": "unitCommand",
+        "playerId": client.sessionId,
+        "unitId": data.unitId,
+        "task": data.task,
+        "repeat": data.repeat
       });
     }
   }
